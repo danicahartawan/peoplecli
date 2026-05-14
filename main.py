@@ -8,7 +8,7 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.text import Text
 from dotenv import load_dotenv
-import requests
+from exa_py import Exa
 from openai import OpenAI
 
 load_dotenv()
@@ -38,17 +38,14 @@ def exa_search(query: str, num_results: int = 10) -> list[dict]:
         raise typer.Exit(1)
 
     nvidia_query = f"NVIDIA {query}"
-    url = "https://api.exa.ai/search"
-    headers = {"x-api-key": EXA_API_KEY, "Content-Type": "application/json"}
-    payload = {
-        "query": nvidia_query,
-        "numResults": num_results,
-        "useAutoprompt": True,
-        "contents": {"text": {"maxCharacters": 2000}},
-    }
-    resp = requests.post(url, json=payload, headers=headers, timeout=30)
-    resp.raise_for_status()
-    return resp.json().get("results", [])
+    exa = Exa(api_key=EXA_API_KEY)
+    result = exa.search(
+        nvidia_query,
+        category="people",
+        num_results=num_results,
+        contents={"highlights": True},
+    )
+    return [r.__dict__ for r in result.results]
 
 
 def extract_people(query: str, search_results: list[dict]) -> list[dict]:
@@ -59,7 +56,11 @@ def extract_people(query: str, search_results: list[dict]) -> list[dict]:
     client = OpenAI(api_key=OPENAI_API_KEY)
 
     snippets = "\n\n---\n\n".join(
-        f"URL: {r.get('url', '')}\nTitle: {r.get('title', '')}\n{r.get('text', '')[:1500]}"
+        "URL: {}\nTitle: {}\n{}".format(
+            r.get("url", ""),
+            r.get("title", ""),
+            "\n".join(r.get("highlights", []) or [r.get("text", "")[:1500]]),
+        )
         for r in search_results
     )
 
