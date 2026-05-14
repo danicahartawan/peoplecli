@@ -13,7 +13,7 @@ from openai import OpenAI
 
 load_dotenv()
 
-app = typer.Typer(help="People-search CLI for discovering founders, researchers, and builders.")
+app = typer.Typer(help="NVIDIA people-search CLI — find researchers, engineers, and builders in the NVIDIA ecosystem.")
 console = Console()
 
 SAVED_FILE = Path.home() / ".peoplecli_saved.json"
@@ -37,10 +37,11 @@ def exa_search(query: str, num_results: int = 10) -> list[dict]:
         console.print("[red]EXA_API_KEY not set in .env[/red]")
         raise typer.Exit(1)
 
+    nvidia_query = f"NVIDIA {query}"
     url = "https://api.exa.ai/search"
     headers = {"x-api-key": EXA_API_KEY, "Content-Type": "application/json"}
     payload = {
-        "query": query,
+        "query": nvidia_query,
         "numResults": num_results,
         "useAutoprompt": True,
         "contents": {"text": {"maxCharacters": 2000}},
@@ -62,22 +63,24 @@ def extract_people(query: str, search_results: list[dict]) -> list[dict]:
         for r in search_results
     )
 
-    prompt = f"""You are a research assistant. Given the search query and web results below, extract up to 5 real, specific people who are relevant to the query.
+    prompt = f"""You are a research assistant helping an NVIDIA intern find the right people to connect with.
+Given the search query and web results below, extract up to 5 real, specific people who work at NVIDIA or are closely connected to NVIDIA's ecosystem (researchers, developer advocates, engineers, external partners, or builders using NVIDIA tech).
 
 Search query: {query}
 
 Web results:
 {snippets}
 
-Return a JSON array (and nothing else) where each element has exactly these keys:
+Return a JSON object with a "people" key containing an array where each element has exactly these keys:
 - name (string)
-- role (string)
-- company (string)
-- why_relevant (string, 1-2 sentences)
-- outreach_angle (string, 1 sentence)
-- source_url (string, the most relevant URL for this person)
+- role (string, their job title)
+- team_or_area (string, e.g. "CUDA Platform", "AI Research", "Developer Relations", "Healthcare AI")
+- nvidia_connection (string, are they at NVIDIA, a partner, a researcher using NVIDIA tech, etc.)
+- why_relevant (string, 1-2 sentences explaining why an intern should know this person)
+- outreach_angle (string, 1 sentence — a specific, non-generic reason to reach out as an intern)
+- source_url (string)
 
-If fewer than 5 relevant people can be identified, return only those found. Do not invent people."""
+Only include people with a clear NVIDIA connection. Do not invent people."""
 
     response = client.chat.completions.create(
         model="gpt-4o-mini",
@@ -100,7 +103,8 @@ If fewer than 5 relevant people can be identified, return only those found. Do n
 def print_person(idx: int, p: dict):
     name = p.get("name", "Unknown")
     role = p.get("role", "")
-    company = p.get("company", "")
+    team = p.get("team_or_area", p.get("company", ""))
+    connection = p.get("nvidia_connection", "")
     why = p.get("why_relevant", "")
     angle = p.get("outreach_angle", "")
     source = p.get("source_url", "")
@@ -108,7 +112,8 @@ def print_person(idx: int, p: dict):
     header = Text(f"{idx}. {name}", style="bold cyan")
     body = (
         f"[bold]Role:[/bold] {role}\n"
-        f"[bold]Company:[/bold] {company}\n"
+        f"[bold]Team / Area:[/bold] {team}\n"
+        f"[bold]NVIDIA connection:[/bold] {connection}\n"
         f"[bold]Why relevant:[/bold] {why}\n"
         f"[bold]Outreach angle:[/bold] {angle}\n"
         f"[bold]Source:[/bold] [link={source}]{source}[/link]"
@@ -149,7 +154,8 @@ def save(name: str = typer.Argument(..., help="Full name of the person to save")
     # Since we don't persist find results between runs, ask user for details manually
     console.print(f"[dim]Saving:[/dim] [bold]{name}[/bold]")
     role = typer.prompt("Role")
-    company = typer.prompt("Company")
+    team = typer.prompt("Team / Area (e.g. CUDA Platform, AI Research)")
+    connection = typer.prompt("NVIDIA connection (at NVIDIA / partner / researcher)")
     why = typer.prompt("Why relevant")
     angle = typer.prompt("Outreach angle")
     source = typer.prompt("Source URL", default="")
@@ -157,7 +163,8 @@ def save(name: str = typer.Argument(..., help="Full name of the person to save")
     person = {
         "name": name,
         "role": role,
-        "company": company,
+        "team_or_area": team,
+        "nvidia_connection": connection,
         "why_relevant": why,
         "outreach_angle": angle,
         "source_url": source,
@@ -197,7 +204,7 @@ def export(
         console.print("[yellow]No saved people to export.[/yellow]")
         raise typer.Exit()
 
-    fields = ["name", "role", "company", "why_relevant", "outreach_angle", "source_url"]
+    fields = ["name", "role", "team_or_area", "nvidia_connection", "why_relevant", "outreach_angle", "source_url"]
     with open(output, "w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=fields)
         writer.writeheader()
@@ -223,12 +230,14 @@ def intro(name: str = typer.Argument(..., help="Name of the saved person to draf
 
     client = OpenAI(api_key=OPENAI_API_KEY)
 
-    prompt = f"""Write a short, genuine cold outreach message (3-4 sentences) for the following person.
-Do not be sycophantic. Be direct and specific about why you're reaching out.
+    prompt = f"""Write a short, genuine outreach message (3-4 sentences) from an NVIDIA intern to the following person.
+Do not be sycophantic. Be direct, specific, and intern-appropriate — mention the internship context naturally.
+The goal is to start a real conversation, not to impress.
 
 Name: {match['name']}
 Role: {match['role']}
-Company: {match['company']}
+Team / Area: {match.get('team_or_area', '')}
+NVIDIA connection: {match.get('nvidia_connection', '')}
 Why relevant: {match['why_relevant']}
 Outreach angle: {match['outreach_angle']}
 
