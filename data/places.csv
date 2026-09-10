@@ -1,0 +1,46 @@
+place_id,name,category,lat,lng,indoor,access,notes
+p01,doe library main reading room,study_formal,37.87229,-122.25931,1,public,north entrance; long tables
+p02,doe library north reading room,study_formal,37.87243,-122.25931,1,public,quieter twin of main
+p03,morrison library,study_soft,37.87205,-122.25902,1,public,no laptops; armchairs and lamps
+p04,main stacks (doe lower level),study_formal,37.87215,-122.25975,1,cal_id,underground; no daylight
+p05,moffitt library 1st floor,study_social,37.87275,-122.26071,1,cal_id,talking permitted
+p06,moffitt library 4th floor,study_quiet,37.87275,-122.26071,1,cal_id,quiet floor
+p07,east asian library,study_formal,37.87352,-122.26018,1,public,upper floors near empty
+p08,bancroft library reading room,study_formal,37.87199,-122.25872,1,registration,bag check; very slow room
+p09,engineering library (bechtel),study_formal,37.87424,-122.25823,1,public,
+p10,long business library (haas),study_formal,37.87168,-122.25352,1,cal_id,
+p11,free speech movement cafe,cafe,37.87251,-122.26016,1,public,inside doe
+p12,caffe strada,cafe,37.86930,-122.25462,0,public,outdoor patio; bancroft at college
+p13,vlsb atrium,lobby,37.87130,-122.26240,1,public,t rex skeleton; tall volume
+p14,dwinelle hall courtyard,courtyard,37.87058,-122.26100,0,public,concrete pocket
+p15,wheeler hall corridor benches,corridor,37.87020,-122.25890,1,public,empty mid hour
+p16,soda hall 5th floor (wozniak lounge),lounge,37.87560,-122.25890,1,public,glass corner; long views
+p17,cory hall courtyard,courtyard,37.87498,-122.25760,0,public,
+p18,hearst mining building lobby,lobby,37.87400,-122.25732,1,public,domed skylights
+p19,mlk student union 3rd floor lounge,lounge,37.86930,-122.26040,1,public,couches
+p20,evans hall upper floor hallway,corridor,37.87383,-122.25776,1,public,west windows
+p21,kroeber hall courtyard,courtyard,37.86985,-122.25565,0,public,fountain; shaded
+p22,memorial glade,lawn,37.87313,-122.25955,0,public,full sky
+p23,faculty glade,lawn,37.87107,-122.25717,0,public,sunken; old trees
+p24,eucalyptus grove,grove,37.87020,-122.26190,0,public,tall canopy; dim
+p25,strawberry creek north fork,creek,37.87320,-122.26185,0,public,water noise; benches
+p26,observatory hill,hill,37.87430,-122.26055,0,public,rarely crossed
+p27,south hall lawn,lawn,37.87090,-122.25812,0,public,small
+p28,crescent lawn (west circle),lawn,37.87070,-122.26450,0,public,west entrance
+p29,grinnell natural area path,path,37.87180,-122.26330,0,public,narrow; planted
+p30,sather tower esplanade,plaza,37.87216,-122.25783,0,public,bells on the hour
+p31,hearst mining circle,plaza,37.87400,-122.25730,0,public,large oval
+p32,hearst greek theatre,amphitheatre,37.87389,-122.25436,0,public,empty most days
+p33,north field,field,37.86995,-122.25640,0,public,turf
+p34,sproul plaza,plaza,37.86960,-122.25890,0,public,loudest point on campus
+p35,lower sproul terrace,plaza,37.86930,-122.26040,0,public,food; heavy crossing traffic
+p36,sather gate,gateway,37.86995,-122.25936,0,public,pinch point
+p37,haas school courtyard,courtyard,37.87178,-122.25330,0,public,terraced steps
+p38,bowles hall steps,steps,37.87330,-122.25290,0,public,shaded; against the hill
+p39,foothill terrace,terrace,37.87540,-122.25470,0,public,uphill; warm brick
+p40,stern hall lawn,lawn,37.87610,-122.25620,0,public,
+p41,big c trail lower switchback,trail,37.87330,-122.24560,0,public,steep; city views
+p42,botanical garden lower entrance,garden,37.87550,-122.23860,0,ticketed,check hours
+p43,peoples park,park,37.86590,-122.25722,0,public,
+p44,willard park,park,37.86140,-122.25650,0,public,residential; south berkeley
+p45,downtown berkeley public library 3rd floor,library,37.86960,-122.27070,1,public,city library; not campus
