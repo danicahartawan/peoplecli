@@ -1,0 +1,416 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>berkeley spaces</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0a0a0a;
+    --muted:#8a8a8a;
+    --faint:#c9c9c9;
+    --line:#e6e6e6;
+    --bg:#ffffff;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden;background:var(--bg)}
+  body{
+    font-family:'Inter',system-ui,-apple-system,sans-serif;
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+    font-size:13px;
+    letter-spacing:-0.01em;
+  }
+  canvas{display:block;position:fixed;inset:0;cursor:grab}
+  canvas.dragging{cursor:grabbing}
+
+  .ui{position:fixed;z-index:2}
+
+  /* header */
+  .head{top:26px;left:28px}
+  .head h1{font-size:14px;font-weight:500;letter-spacing:-0.02em}
+  .head p{margin-top:5px;font-size:12px;font-weight:300;color:var(--muted);max-width:280px;line-height:1.5}
+
+  /* legend */
+  .legend{bottom:28px;left:28px;font-size:11.5px;font-weight:300;color:var(--muted)}
+  .legend .row{display:flex;align-items:center;gap:9px;margin-top:7px}
+  .legend .dot{width:6px;height:6px;border-radius:50%}
+  .legend .rule{width:150px;height:1px;background:var(--line);margin-bottom:12px}
+  .legend .flag{width:6px;height:6px;border-radius:50%;border:1px solid #b8342f;background:transparent}
+
+  /* zoom hint */
+  .hint{bottom:28px;right:28px;font-size:11px;font-weight:300;color:var(--faint);text-align:right;line-height:1.7}
+
+  /* chat */
+  .chat{
+    bottom:26px;left:50%;transform:translateX(-50%);
+    width:min(520px,calc(100vw - 56px));
+    background:rgba(255,255,255,.92);
+    backdrop-filter:blur(8px);
+    border:1px solid var(--line);
+    border-radius:14px;
+    box-shadow:0 6px 24px rgba(0,0,0,.05);
+    overflow:hidden;
+  }
+  .chat .log{max-height:184px;overflow-y:auto;padding:14px 16px 4px;display:none}
+  .chat .log.on{display:block}
+  .chat .msg{font-size:12.5px;font-weight:300;line-height:1.6;margin-bottom:10px;max-width:92%}
+  .chat .msg.me{color:var(--ink);font-weight:400}
+  .chat .msg.ai{color:#3d3d3d}
+  .chat .msg.ai b{font-weight:500;color:var(--ink)}
+  .chat .bar{display:flex;align-items:center;gap:10px;padding:12px 14px}
+  .chat input{
+    flex:1;border:0;outline:0;background:transparent;
+    font-family:inherit;font-size:12.5px;font-weight:300;color:var(--ink);
+  }
+  .chat input::placeholder{color:var(--faint)}
+  .chat button{
+    border:1px solid var(--line);background:#fff;border-radius:50%;
+    width:26px;height:26px;cursor:pointer;color:var(--ink);
+    display:flex;align-items:center;justify-content:center;font-size:12px;
+    transition:background .15s ease;
+  }
+  .chat button:hover{background:#f4f4f4}
+
+  /* place card */
+  .card{
+    top:26px;right:28px;width:236px;
+    background:rgba(255,255,255,.94);
+    backdrop-filter:blur(8px);
+    border:1px solid var(--line);border-radius:12px;
+    padding:15px 16px;opacity:0;pointer-events:none;
+    transform:translateY(-4px);transition:opacity .22s ease,transform .22s ease;
+  }
+  .card.on{opacity:1;transform:none;pointer-events:auto}
+  .card .t{font-size:13px;font-weight:500}
+  .card .s{font-size:11px;font-weight:300;color:var(--muted);margin-top:3px}
+  .card .b{font-size:12px;font-weight:300;line-height:1.55;color:#3d3d3d;margin-top:11px}
+  .card .tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:12px}
+  .card .tag{font-size:10.5px;font-weight:300;color:var(--muted);border:1px solid var(--line);border-radius:20px;padding:3px 8px}
+  .card .tag.crowd{color:#b8342f;border-color:#f0d6d4}
+  .card .x{position:absolute;top:12px;right:13px;color:var(--faint);cursor:pointer;font-size:13px;line-height:1}
+  .card .x:hover{color:var(--ink)}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+
+<div class="ui head">
+  <h1>berkeley spaces</h1>
+  <p>a map of how places feel. dots are places, contours are how their quality spreads.</p>
+</div>
+
+<div class="ui legend" id="legend">
+  <div class="rule"></div>
+</div>
+
+<div class="ui hint">scroll to zoom · drag to pan<br>click a dot</div>
+
+<div class="ui card" id="card">
+  <div class="x" id="cardx">×</div>
+  <div class="t" id="cardt"></div>
+  <div class="s" id="cards"></div>
+  <div class="b" id="cardb"></div>
+  <div class="tags" id="cardtags"></div>
+</div>
+
+<div class="ui chat">
+  <div class="log" id="log"></div>
+  <div class="bar">
+    <input id="input" autocomplete="off" placeholder="how are you feeling, and what do you need to do?" />
+    <button id="send">↑</button>
+  </div>
+</div>
+
+<script>
+/* ---------- palette (no purple) ---------- */
+const CAT = {
+  quiet:      { c:'#2f5d62', label:'quiet & still' },
+  greenery:   { c:'#7ba05b', label:'greenery' },
+  light:      { c:'#d9a441', label:'natural light' },
+  open:       { c:'#4a76b8', label:'open air' },
+  enclosed:   { c:'#a8845c', label:'enclosed & private' },
+  hum:        { c:'#dd6b3a', label:'low hum & motion' },
+};
+
+/* ---------- places (uc berkeley campus) ---------- */
+const PLACES = [
+  ['doe memorial library',      37.87229,-122.25931,'quiet',    1,'long tables, high ceilings, everyone reading in the same direction.',['reading','focus']],
+  ['morrison library',          37.87205,-122.25902,'enclosed', 0,'wood panels, lamps, armchairs. no laptops, so no clatter.',['reading','decompress']],
+  ['moffitt library, 4th',      37.87275,-122.26071,'hum',      1,'steady low buzz. easy to disappear into if you like company nearby.',['focus','company']],
+  ['east asian library',        37.87352,-122.26018,'quiet',    0,'wide light, almost no foot traffic past the second floor.',['focus','reading']],
+  ['bancroft library',          37.87199,-122.25872,'quiet',    0,'slow, careful room. everything here moves at half speed.',['reading']],
+  ['free speech movement cafe', 37.87251,-122.26016,'hum',      1,'talk, espresso, chairs scraping. good when silence feels worse.',['company','brainstorm']],
+  ['memorial glade',            37.87313,-122.25955,'open',     1,'flat open grass with the whole sky over it.',['decompress','social']],
+  ['faculty glade',             37.87107,-122.25717,'greenery', 0,'sunken lawn under old trees, tucked off the main paths.',['calm','decompress']],
+  ['eucalyptus grove',          37.87020,-122.26190,'greenery', 0,'tallest hardwoods around. cool, dim, smells like the coast.',['calm','walk']],
+  ['strawberry creek, north fork',37.87320,-122.26185,'greenery',0,'water noise covers everything else. benches along the bank.',['calm','walk']],
+  ['observatory hill',          37.87430,-122.26055,'greenery', 0,'a hill nobody crosses on purpose. views west, mostly empty.',['solitude']],
+  ['sather tower esplanade',    37.87216,-122.25783,'open',     0,'wide stone, long sight lines, bells on the hour.',['walk','think']],
+  ['south hall lawn',           37.87090,-122.25812,'greenery', 0,'small lawn behind the oldest building on campus.',['calm']],
+  ['hearst mining circle',      37.87400,-122.25730,'open',     0,'a big quiet oval. rarely more than a few people.',['walk','think']],
+  ['hearst greek theatre',      37.87389,-122.25436,'open',     0,'empty stone tiers most days. sit high up and the city opens.',['solitude','decompress']],
+  ['bowles hall steps',         37.87330,-122.25290,'enclosed', 0,'east edge of campus, shaded, up against the hill.',['solitude']],
+  ['wheeler hall',              37.87020,-122.25890,'enclosed', 1,'busy between the hour, then completely still.',['focus']],
+  ['dwinelle courtyard',        37.87058,-122.26100,'enclosed', 0,'concrete pocket with benches. loud outside, muffled inside.',['focus']],
+  ['sproul plaza',              37.86960,-122.25890,'hum',      1,'the loudest place on campus. tables, flyers, drums.',['social']],
+  ['lower sproul',              37.86930,-122.26040,'hum',      1,'open terrace, food, constant crossing traffic.',['social','company']],
+  ['north field',               37.86995,-122.25640,'open',     0,'turf and fences. quiet outside practice hours.',['decompress']],
+  ['kroeber courtyard',         37.86985,-122.25565,'enclosed', 0,'small shaded square, fountain, almost always free seats.',['calm','reading']],
+  ['valley life sciences steps',37.87130,-122.26240,'light',    0,'wide west-facing steps that hold the afternoon sun.',['light','think']],
+  ['giannini hall lawn',        37.87415,-122.26265,'light',    0,'north side, low traffic, morning light through the oaks.',['light','calm']],
+  ['soda hall, 5th floor',      37.87560,-122.25890,'light',    0,'glass corner, long views, mostly silent after dark.',['focus']],
+  ['cory hall courtyard',       37.87498,-122.25760,'enclosed', 0,'flat concrete and benches between two loud buildings.',['focus']],
+  ['haas courtyard',            37.87178,-122.25330,'hum',      0,'terraced steps, coffee, low conversation all day.',['company','brainstorm']],
+  ['foothill terrace',          37.87540,-122.25470,'light',    0,'uphill, warm brick, quiet in the middle of the day.',['calm','reading']],
+];
+
+/* ---------- projection (lat/lng -> meters, campus centered) ---------- */
+const LAT0 = 37.8722, LNG0 = -122.2585;
+const MLNG = 111320 * Math.cos(LAT0 * Math.PI / 180), MLAT = 110570;
+function proj(lat, lng){ return [ (lng - LNG0) * MLNG, -(lat - LAT0) * MLAT ]; }
+
+/* ---------- seeded rng ---------- */
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+
+/* ---------- build places + plumes ---------- */
+const WIND = -Math.PI * 0.28; // prevailing southwesterly, blowing northeast
+const places = PLACES.map((p, i) => {
+  const [x, y] = proj(p[1], p[2]);
+  const r = mulberry32(9001 + i * 733);
+  return { name:p[0], x, y, cat:p[3], crowded:!!p[4], blurb:p[5], tags:p[6], plume:makePlume(r) };
+});
+
+function makePlume(r){
+  const S = 72, rings = 11 + Math.floor(r() * 5);
+  const k1 = 2 + Math.floor(r()*3), k2 = 4 + Math.floor(r()*3);
+  const p1 = r()*6.283, p2 = r()*6.283;
+  const a1 = .16 + r()*.24, a2 = .06 + r()*.15;
+  const base = [];
+  for(let i=0;i<S;i++){
+    const th = i/S*6.28318;
+    const rad = 1 + a1*Math.sin(k1*th+p1) + a2*Math.sin(k2*th+p2);
+    base.push([Math.cos(th)*rad, Math.sin(th)*rad]);
+  }
+  const dir = WIND + (r()-.5)*1.15;
+  const len = 190 + r()*330;
+  const rad0 = 26 + r()*34;
+  const twist = (r()-.5)*1.3;
+  const out = [];
+  for(let k=0;k<rings;k++){
+    const t = (k+1)/rings;
+    const sc = .08 + t*.92;
+    const el = 1 + t*2.4;
+    const a = dir + twist*t;
+    const ca = Math.cos(a), sa = Math.sin(a);
+    const rx = rad0*sc*el, ry = rad0*sc;
+    const d = len*Math.pow(t,1.55);
+    const cx = Math.cos(dir)*d, cy = Math.sin(dir)*d;
+    const pts = new Float32Array(S*2);
+    for(let i=0;i<S;i++){
+      const lx = base[i][0]*rx, ly = base[i][1]*ry;
+      pts[i*2]   = cx + lx*ca - ly*sa;
+      pts[i*2+1] = cy + lx*sa + ly*ca;
+    }
+    out.push(pts);
+  }
+  return out;
+}
+
+/* ---------- canvas ---------- */
+const cv = document.getElementById('c'), ctx = cv.getContext('2d');
+let W=0, H=0, DPR=1;
+function resize(){
+  DPR = Math.min(window.devicePixelRatio||1, 2);
+  W = window.innerWidth; H = window.innerHeight;
+  cv.width = W*DPR; cv.height = H*DPR;
+  cv.style.width = W+'px'; cv.style.height = H+'px';
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+}
+window.addEventListener('resize', ()=>{ resize(); draw(); });
+resize();
+
+const cam = { x:-40, y:20, z:0.62 };
+const target = { ...cam };
+let animating = false;
+
+function sx(wx){ return (wx - cam.x)*cam.z + W/2; }
+function sy(wy){ return (wy - cam.y)*cam.z + H/2; }
+
+function hexa(hex, a){
+  const n = parseInt(hex.slice(1),16);
+  return `rgba(${n>>16&255},${n>>8&255},${n&255},${a})`;
+}
+
+let hovered = null, selected = null;
+
+function draw(){
+  ctx.clearRect(0,0,W,H);
+
+  // contours
+  ctx.lineWidth = 0.55;
+  for(const p of places){
+    const col = CAT[p.cat].c;
+    const px = sx(p.x), py = sy(p.y);
+    const dim = (selected && selected !== p) ? .35 : 1;
+    ctx.strokeStyle = hexa(col, .42*dim);
+    for(const ring of p.plume){
+      ctx.beginPath();
+      for(let i=0;i<ring.length;i+=2){
+        const X = px + ring[i]*cam.z, Y = py + ring[i+1]*cam.z;
+        i===0 ? ctx.moveTo(X,Y) : ctx.lineTo(X,Y);
+      }
+      ctx.closePath();
+      ctx.stroke();
+    }
+  }
+
+  // dots
+  for(const p of places){
+    const px = sx(p.x), py = sy(p.y);
+    if(px<-80||px>W+80||py<-80||py>H+80) continue;
+    const col = CAT[p.cat].c;
+    const dim = (selected && selected !== p) ? .35 : 1;
+    const isActive = (hovered===p || selected===p);
+
+    if(p.crowded){
+      ctx.strokeStyle = hexa('#b8342f', .55*dim);
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.arc(px,py, isActive?9:7.5, 0, 6.2832); ctx.stroke();
+    }
+    ctx.fillStyle = hexa(col, dim);
+    ctx.beginPath(); ctx.arc(px,py, isActive?5:3.6, 0, 6.2832); ctx.fill();
+
+    // labels
+    const showLabel = cam.z > 1.15 || isActive;
+    if(showLabel){
+      ctx.font = '400 11px Inter, system-ui, sans-serif';
+      ctx.fillStyle = isActive ? 'rgba(10,10,10,.95)' : `rgba(10,10,10,${.5*dim})`;
+      ctx.textBaseline = 'middle';
+      ctx.fillText(p.name, px + (p.crowded?13:9), py);
+      if(p.crowded && (cam.z>1.6 || isActive)){
+        const w = ctx.measureText(p.name).width;
+        ctx.font = '300 10px Inter, system-ui, sans-serif';
+        ctx.fillStyle = `rgba(184,52,47,${.75*dim})`;
+        ctx.fillText('crowded', px + (p.crowded?13:9) + w + 8, py);
+      }
+    }
+  }
+}
+
+/* ---------- camera animation ---------- */
+function tick(){
+  const dx = target.x-cam.x, dy = target.y-cam.y, dz = target.z-cam.z;
+  if(Math.abs(dx)<.05 && Math.abs(dy)<.05 && Math.abs(dz)<.0004){
+    cam.x=target.x; cam.y=target.y; cam.z=target.z; animating=false; draw(); return;
+  }
+  cam.x += dx*.11; cam.y += dy*.11; cam.z += dz*.11;
+  draw(); requestAnimationFrame(tick);
+}
+function flyTo(x,y,z){ target.x=x; target.y=y; target.z=z; if(!animating){animating=true; requestAnimationFrame(tick);} }
+
+/* ---------- interaction ---------- */
+let dragging=false, moved=false, lx=0, ly=0;
+cv.addEventListener('pointerdown', e=>{ dragging=true; moved=false; lx=e.clientX; ly=e.clientY; cv.classList.add('dragging'); cv.setPointerCapture(e.pointerId); });
+cv.addEventListener('pointerup', e=>{ dragging=false; cv.classList.remove('dragging'); if(!moved) clickAt(e.clientX,e.clientY); });
+cv.addEventListener('pointermove', e=>{
+  if(dragging){
+    const dx=e.clientX-lx, dy=e.clientY-ly;
+    if(Math.abs(dx)+Math.abs(dy)>3) moved=true;
+    cam.x -= dx/cam.z; cam.y -= dy/cam.z;
+    target.x=cam.x; target.y=cam.y;
+    lx=e.clientX; ly=e.clientY; draw();
+  } else {
+    const h = pick(e.clientX,e.clientY);
+    if(h!==hovered){ hovered=h; cv.style.cursor = h?'pointer':'grab'; draw(); }
+  }
+});
+cv.addEventListener('wheel', e=>{
+  e.preventDefault();
+  const f = Math.exp(-e.deltaY*0.0016);
+  const nz = Math.min(4.5, Math.max(0.28, cam.z*f));
+  const wx = (e.clientX - W/2)/cam.z + cam.x;
+  const wy = (e.clientY - H/2)/cam.z + cam.y;
+  cam.x = wx - (e.clientX - W/2)/nz;
+  cam.y = wy - (e.clientY - H/2)/nz;
+  cam.z = nz;
+  target.x=cam.x; target.y=cam.y; target.z=cam.z;
+  draw();
+}, {passive:false});
+
+function pick(cx,cy){
+  let best=null, bd=16;
+  for(const p of places){
+    const d = Math.hypot(sx(p.x)-cx, sy(p.y)-cy);
+    if(d<bd){ bd=d; best=p; }
+  }
+  return best;
+}
+function clickAt(cx,cy){
+  const p = pick(cx,cy);
+  if(p) select(p, false); else clearSel();
+}
+
+/* ---------- card ---------- */
+const card=document.getElementById('card');
+function select(p, fly){
+  selected = p;
+  document.getElementById('cardt').textContent = p.name;
+  document.getElementById('cards').textContent = CAT[p.cat].label;
+  document.getElementById('cardb').textContent = p.blurb;
+  const t = document.getElementById('cardtags');
+  t.innerHTML = '';
+  p.tags.forEach(tag=>{ const d=document.createElement('div'); d.className='tag'; d.textContent=tag; t.appendChild(d); });
+  if(p.crowded){ const d=document.createElement('div'); d.className='tag crowd'; d.textContent='usually crowded'; t.appendChild(d); }
+  card.classList.add('on');
+  if(fly) flyTo(p.x+90, p.y, 2.1); else draw();
+}
+function clearSel(){ selected=null; card.classList.remove('on'); draw(); }
+document.getElementById('cardx').onclick = clearSel;
+
+/* ---------- legend ---------- */
+const legend = document.getElementById('legend');
+for(const k in CAT){
+  const r = document.createElement('div'); r.className='row';
+  r.innerHTML = `<div class="dot" style="background:${CAT[k].c}"></div><div>${CAT[k].label}</div>`;
+  legend.appendChild(r);
+}
+const cr = document.createElement('div'); cr.className='row';
+cr.innerHTML = `<div class="flag"></div><div>usually crowded</div>`;
+legend.appendChild(cr);
+
+/* ---------- chat (hardcoded for now) ---------- */
+const log=document.getElementById('log'), input=document.getElementById('input');
+const SCRIPT = [
+  { place:'morrison library', text:'if you are overstimulated and need to read, try <b>morrison library</b>. enclosed, warm lamps, no laptops, and it never fills up.' },
+  { place:'faculty glade',    text:'for coming down from something, <b>faculty glade</b> is sunken and shaded, off the main paths, and open sky above it.' },
+  { place:'haas courtyard',   text:'for thinking out loud with someone, <b>haas courtyard</b> has low conversation all day, so you will not feel watched.' },
+  { place:'east asian library', text:'for a long stretch of focus, <b>east asian library</b> stays quiet past the second floor and holds light until late afternoon.' },
+];
+let step = 0;
+function say(cls, html){
+  const d=document.createElement('div'); d.className='msg '+cls; d.innerHTML=html;
+  log.appendChild(d); log.classList.add('on'); log.scrollTop = log.scrollHeight;
+}
+function send(){
+  const v = input.value.trim();
+  if(!v) return;
+  say('me', v);
+  input.value='';
+  const s = SCRIPT[step % SCRIPT.length]; step++;
+  setTimeout(()=>{
+    say('ai', s.text);
+    const p = places.find(p=>p.name===s.place);
+    if(p) select(p, true);
+  }, 420);
+}
+document.getElementById('send').onclick = send;
+input.addEventListener('keydown', e=>{ if(e.key==='Enter') send(); });
+
+draw();
+</script>
+</body>
+</html>
