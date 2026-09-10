@@ -9,84 +9,80 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   :root{
-    --ink:#14120d;
-    --muted:#857e70;
-    --faint:#b9b2a2;
-    --line:#e0dbcf;
-    --bg:#f7f4ec;
-    --panel:rgba(250,248,242,.90);
+    --ink:#14120d; --muted:#857e70; --faint:#b9b2a2;
+    --line:#e0dbcf; --bg:#f7f4ec; --panel:rgba(250,248,242,.92);
+    --neg:#b8342f;
   }
   *{box-sizing:border-box;margin:0;padding:0}
   html,body{height:100%;overflow:hidden;background:var(--bg)}
   body{
-    font-family:'Inter',system-ui,-apple-system,sans-serif;
-    color:var(--ink);
-    -webkit-font-smoothing:antialiased;
-    font-size:13px;
-    letter-spacing:-0.01em;
+    font-family:'Inter',system-ui,-apple-system,sans-serif;color:var(--ink);
+    -webkit-font-smoothing:antialiased;font-size:13px;letter-spacing:-0.01em;
   }
   canvas{display:block;position:fixed;inset:0;cursor:grab}
   canvas.dragging{cursor:grabbing}
-
   .ui{position:fixed;z-index:2}
 
-  /* header */
   .head{top:26px;left:28px}
   .head h1{font-size:14px;font-weight:500;letter-spacing:-0.02em}
-  .head p{margin-top:5px;font-size:12px;font-weight:300;color:var(--muted);max-width:280px;line-height:1.5}
+  .head p{margin-top:5px;font-size:12px;font-weight:300;color:var(--muted);max-width:270px;line-height:1.5}
 
-  /* zoom hint */
   .hint{bottom:28px;right:28px;font-size:11px;font-weight:300;color:var(--faint);text-align:right;line-height:1.7}
 
-  /* chat */
   .chat{
     bottom:26px;left:50%;transform:translateX(-50%);
     width:min(520px,calc(100vw - 56px));
-    background:var(--panel);
-    backdrop-filter:blur(9px);
-    border:1px solid var(--line);
-    border-radius:14px;
-    box-shadow:0 6px 24px rgba(0,0,0,.05);
-    overflow:hidden;
+    background:var(--panel);backdrop-filter:blur(9px);
+    border:1px solid var(--line);border-radius:14px;
+    box-shadow:0 6px 24px rgba(0,0,0,.05);overflow:hidden;
   }
-  .chat .log{max-height:184px;overflow-y:auto;padding:14px 16px 4px;display:none}
+  .chat .log{max-height:172px;overflow-y:auto;padding:14px 16px 4px;display:none}
   .chat .log.on{display:block}
-  .chat .msg{font-size:12.5px;font-weight:300;line-height:1.6;margin-bottom:10px;max-width:92%}
+  .chat .msg{font-size:12.5px;font-weight:300;line-height:1.6;margin-bottom:10px}
   .chat .msg.me{color:var(--ink);font-weight:400}
   .chat .msg.ai{color:#3d3d3d}
   .chat .msg.ai b{font-weight:500;color:var(--ink)}
   .chat .bar{display:flex;align-items:center;gap:10px;padding:12px 14px}
-  .chat input{
-    flex:1;border:0;outline:0;background:transparent;
-    font-family:inherit;font-size:12.5px;font-weight:300;color:var(--ink);
-  }
+  .chat input{flex:1;border:0;outline:0;background:transparent;font-family:inherit;
+    font-size:12.5px;font-weight:300;color:var(--ink)}
   .chat input::placeholder{color:var(--faint)}
-  .chat button{
-    border:1px solid var(--line);background:rgba(255,255,255,.6);border-radius:50%;
-    width:26px;height:26px;cursor:pointer;color:var(--ink);
+  .chat button{border:1px solid var(--line);background:rgba(255,255,255,.6);
+    border-radius:50%;width:26px;height:26px;cursor:pointer;color:var(--ink);
     display:flex;align-items:center;justify-content:center;font-size:12px;
-    transition:background .15s ease;
-  }
+    transition:background .15s ease}
   .chat button:hover{background:rgba(255,255,255,.95)}
 
-  /* place card */
   .card{
-    top:26px;right:28px;width:236px;
-    background:var(--panel);
-    backdrop-filter:blur(8px);
-    border:1px solid var(--line);border-radius:12px;
-    padding:15px 16px;opacity:0;pointer-events:none;
-    transform:translateY(-4px);transition:opacity .22s ease,transform .22s ease;
+    top:26px;right:28px;width:260px;max-height:calc(100vh - 140px);overflow-y:auto;
+    background:var(--panel);backdrop-filter:blur(8px);
+    border:1px solid var(--line);border-radius:12px;padding:15px 16px;
+    opacity:0;pointer-events:none;transform:translateY(-4px);
+    transition:opacity .22s ease,transform .22s ease;
   }
   .card.on{opacity:1;transform:none;pointer-events:auto}
-  .card .t{font-size:13px;font-weight:500}
+  .card .t{font-size:13px;font-weight:500;padding-right:14px}
   .card .s{font-size:11px;font-weight:300;color:var(--muted);margin-top:3px}
-  .card .b{font-size:12px;font-weight:300;line-height:1.55;color:#3d3d3d;margin-top:11px}
-  .card .tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:12px}
-  .card .tag{font-size:10.5px;font-weight:300;color:var(--muted);border:1px solid var(--line);border-radius:20px;padding:3px 8px}
-  .card .tag.crowd{color:#b8342f;border-color:#f0d6d4}
-  .card .x{position:absolute;top:12px;right:13px;color:var(--faint);cursor:pointer;font-size:13px;line-height:1}
+  .card .b{font-size:12px;font-weight:300;line-height:1.55;color:#3d3d3d;margin-top:10px}
+  .card .tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:11px}
+  .card .tag{font-size:10.5px;font-weight:300;color:var(--muted);
+    border:1px solid var(--line);border-radius:20px;padding:3px 8px}
+  .card .x{position:absolute;top:12px;right:13px;color:var(--faint);cursor:pointer;
+    font-size:13px;line-height:1}
   .card .x:hover{color:var(--ink)}
+
+  /* why panel */
+  .why{margin-top:14px;padding-top:12px;border-top:1px solid var(--line);display:none}
+  .why.on{display:block}
+  .why h3{font-size:10.5px;font-weight:400;color:var(--muted);letter-spacing:.02em;margin-bottom:9px}
+  .why .row{margin-bottom:8px}
+  .why .lab{display:flex;justify-content:space-between;font-size:10.5px;font-weight:300;
+    color:var(--muted);margin-bottom:3px}
+  .why .lab span:first-child{color:#3d3d3d}
+  .why .track{height:3px;background:#e8e3d8;border-radius:2px;position:relative;overflow:hidden}
+  .why .fill{position:absolute;top:0;height:100%;border-radius:2px;
+    transition:width .3s ease,left .3s ease}
+  .why .mid{position:absolute;left:50%;top:-1px;width:1px;height:5px;background:#d3ccbd}
+  .why .foot{font-size:10px;font-weight:300;color:var(--faint);line-height:1.5;margin-top:10px}
 </style>
 </head>
 <body>
@@ -94,9 +90,8 @@
 
 <div class="ui head">
   <h1>berkeley spaces</h1>
-  <p>a map of how places feel. dots are places, contours are how their quality spreads.</p>
+  <p>dots are places, contours are how their quality spreads. ask for somewhere and the map ranks it.</p>
 </div>
-
 
 <div class="ui hint">scroll to zoom · drag to pan<br>click a dot</div>
 
@@ -106,6 +101,11 @@
   <div class="s" id="cards"></div>
   <div class="b" id="cardb"></div>
   <div class="tags" id="cardtags"></div>
+  <div class="why" id="why">
+    <h3 id="whyhead">why this fits</h3>
+    <div id="whyrows"></div>
+    <div class="foot" id="whyfoot"></div>
+  </div>
 </div>
 
 <div class="ui chat">
@@ -116,90 +116,68 @@
   </div>
 </div>
 
+<script src="data.js"></script>
 <script>
 /* ---------- palette (no purple) ---------- */
 const CAT = {
-  quiet:      { c:'#2f5d62', label:'quiet & still' },
-  greenery:   { c:'#7ba05b', label:'greenery' },
-  light:      { c:'#d9a441', label:'natural light' },
-  open:       { c:'#4a76b8', label:'open air' },
-  enclosed:   { c:'#a8845c', label:'enclosed & private' },
-  hum:        { c:'#dd6b3a', label:'low hum & motion' },
+  quiet:    { c:'#2f5d62', label:'quiet & still' },
+  greenery: { c:'#7ba05b', label:'greenery' },
+  light:    { c:'#d9a441', label:'natural light' },
+  open:     { c:'#4a76b8', label:'open air' },
+  enclosed: { c:'#a8845c', label:'enclosed & private' },
+  hum:      { c:'#dd6b3a', label:'low hum & motion' },
 };
 
-/* ---------- places (uc berkeley campus) ---------- */
-const PLACES = [
-  ['doe memorial library',      37.87229,-122.25931,'quiet',    1,'long tables, high ceilings, everyone reading in the same direction.',['reading','focus']],
-  ['morrison library',          37.87205,-122.25902,'enclosed', 0,'wood panels, lamps, armchairs. no laptops, so no clatter.',['reading','decompress']],
-  ['moffitt library, 4th',      37.87275,-122.26071,'hum',      1,'steady low buzz. easy to disappear into if you like company nearby.',['focus','company']],
-  ['east asian library',        37.87352,-122.26018,'quiet',    0,'wide light, almost no foot traffic past the second floor.',['focus','reading']],
-  ['bancroft library',          37.87199,-122.25872,'quiet',    0,'slow, careful room. everything here moves at half speed.',['reading']],
-  ['free speech movement cafe', 37.87251,-122.26016,'hum',      1,'talk, espresso, chairs scraping. good when silence feels worse.',['company','brainstorm']],
-  ['memorial glade',            37.87313,-122.25955,'open',     1,'flat open grass with the whole sky over it.',['decompress','social']],
-  ['faculty glade',             37.87107,-122.25717,'greenery', 0,'sunken lawn under old trees, tucked off the main paths.',['calm','decompress']],
-  ['eucalyptus grove',          37.87020,-122.26190,'greenery', 0,'tallest hardwoods around. cool, dim, smells like the coast.',['calm','walk']],
-  ['strawberry creek, north fork',37.87320,-122.26185,'greenery',0,'water noise covers everything else. benches along the bank.',['calm','walk']],
-  ['observatory hill',          37.87430,-122.26055,'greenery', 0,'a hill nobody crosses on purpose. views west, mostly empty.',['solitude']],
-  ['sather tower esplanade',    37.87216,-122.25783,'open',     0,'wide stone, long sight lines, bells on the hour.',['walk','think']],
-  ['south hall lawn',           37.87090,-122.25812,'greenery', 0,'small lawn behind the oldest building on campus.',['calm']],
-  ['hearst mining circle',      37.87400,-122.25730,'open',     0,'a big quiet oval. rarely more than a few people.',['walk','think']],
-  ['hearst greek theatre',      37.87389,-122.25436,'open',     0,'empty stone tiers most days. sit high up and the city opens.',['solitude','decompress']],
-  ['bowles hall steps',         37.87330,-122.25290,'enclosed', 0,'east edge of campus, shaded, up against the hill.',['solitude']],
-  ['wheeler hall',              37.87020,-122.25890,'enclosed', 1,'busy between the hour, then completely still.',['focus']],
-  ['dwinelle courtyard',        37.87058,-122.26100,'enclosed', 0,'concrete pocket with benches. loud outside, muffled inside.',['focus']],
-  ['sproul plaza',              37.86960,-122.25890,'hum',      1,'the loudest place on campus. tables, flyers, drums.',['social']],
-  ['lower sproul',              37.86930,-122.26040,'hum',      1,'open terrace, food, constant crossing traffic.',['social','company']],
-  ['north field',               37.86995,-122.25640,'open',     0,'turf and fences. quiet outside practice hours.',['decompress']],
-  ['kroeber courtyard',         37.86985,-122.25565,'enclosed', 0,'small shaded square, fountain, almost always free seats.',['calm','reading']],
-  ['valley life sciences steps',37.87130,-122.26240,'light',    0,'wide west-facing steps that hold the afternoon sun.',['light','think']],
-  ['giannini hall lawn',        37.87415,-122.26265,'light',    0,'north side, low traffic, morning light through the oaks.',['light','calm']],
-  ['soda hall, 5th floor',      37.87560,-122.25890,'light',    0,'glass corner, long views, mostly silent after dark.',['focus']],
-  ['cory hall courtyard',       37.87498,-122.25760,'enclosed', 0,'flat concrete and benches between two loud buildings.',['focus']],
-  ['haas courtyard',            37.87178,-122.25330,'hum',      0,'terraced steps, coffee, low conversation all day.',['company','brainstorm']],
-  ['foothill terrace',          37.87540,-122.25470,'light',    0,'uphill, warm brick, quiet in the middle of the day.',['calm','reading']],
-];
-
-/* ---------- projection (lat/lng -> meters, campus centered) ---------- */
+/* ---------- projection ---------- */
 const LAT0 = 37.8722, LNG0 = -122.2585;
 const MLNG = 111320 * Math.cos(LAT0 * Math.PI / 180), MLAT = 110570;
-function proj(lat, lng){ return [ (lng - LNG0) * MLNG, -(lat - LAT0) * MLAT ]; }
 
-/* ---------- seeded rng ---------- */
 function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
 
-/* ---------- build places + plumes ---------- */
-const WIND = -Math.PI * 0.28; // prevailing southwesterly, blowing northeast
+const WIND = -Math.PI * 0.28;
 const places = PLACES.map((p, i) => {
-  const [x, y] = proj(p[1], p[2]);
   const r = mulberry32(9001 + i * 733);
-  return { name:p[0], x, y, cat:p[3], crowded:!!p[4], blurb:p[5], tags:p[6], plume:makePlume(r) };
+  return {
+    ...p,
+    x: (p.lng - LNG0) * MLNG,
+    y: -(p.lat - LAT0) * MLAT,
+    plume: makePlume(r),
+  };
 });
+const byId = Object.fromEntries(places.map(p => [p.id, p]));
 
 function makePlume(r){
   const S = 72, rings = 11 + Math.floor(r() * 5);
   const k1 = 2 + Math.floor(r()*3), k2 = 4 + Math.floor(r()*3);
   const p1 = r()*6.283, p2 = r()*6.283;
-  const a1 = .16 + r()*.24, a2 = .06 + r()*.15;
+  // low amplitude: the ellipse stretch amplifies these, and anything
+  // larger reads as a crinkled blob instead of a contour line
+  const a1 = .09 + r()*.13, a2 = .03 + r()*.07;
   const base = [];
   for(let i=0;i<S;i++){
     const th = i/S*6.28318;
     const rad = 1 + a1*Math.sin(k1*th+p1) + a2*Math.sin(k2*th+p2);
     base.push([Math.cos(th)*rad, Math.sin(th)*rad]);
   }
-  const dir = WIND + (r()-.5)*1.15;
-  const len = 190 + r()*330;
-  const rad0 = 26 + r()*34;
-  const twist = (r()-.5)*1.3;
+  const dir = WIND + (r()-.5)*1.15, len = 150 + r()*380;
+  const rad0 = 22 + r()*40, twist = (r()-.5)*1.3;
+  // the drift bends as it travels, so tails curl instead of combing all one
+  // way. integrate the heading rather than translating along a fixed vector.
+  const curl = (r()-.5)*2.5, SUB = 32;
+  const path = [[0,0]];
+  for(let i=1;i<=SUB;i++){
+    const u = i/SUB, th = dir + curl*Math.pow(u,1.3);
+    const prev = path[i-1], step = len/SUB;
+    path.push([prev[0]+Math.cos(th)*step, prev[1]+Math.sin(th)*step]);
+  }
+  const at = t => path[Math.min(SUB, Math.round(Math.pow(t,1.45)*SUB))];
   const out = [];
   for(let k=0;k<rings;k++){
-    const t = (k+1)/rings;
-    const sc = .08 + t*.92;
-    const el = 1 + t*2.4;
-    const a = dir + twist*t;
-    const ca = Math.cos(a), sa = Math.sin(a);
+    const t = (k+1)/rings, sc = .08 + t*.92, el = 1 + t*1.9;
+    const local = dir + curl*Math.pow(t,1.3) + twist*t;
+    const ca = Math.cos(local), sa = Math.sin(local);
     const rx = rad0*sc*el, ry = rad0*sc;
-    const d = len*Math.pow(t,1.55);
-    const cx = Math.cos(dir)*d, cy = Math.sin(dir)*d;
+    const c = at(t), cx = c[0], cy = c[1];
     const pts = new Float32Array(S*2);
     for(let i=0;i<S;i++){
       const lx = base[i][0]*rx, ly = base[i][1]*ry;
@@ -209,52 +187,6 @@ function makePlume(r){
     out.push(pts);
   }
   return out;
-}
-
-/* ---------- paper surface ---------- */
-let paperPat = null;
-function makePaper(){
-  const N = 256, t = document.createElement('canvas');
-  t.width = t.height = N;
-  const g = t.getContext('2d');
-  const img = g.createImageData(N, N);
-  const r = mulberry32(24601);
-  for(let i=0;i<N*N;i++){
-    // two-octave grain: fine speckle over slow blotch
-    const x = i % N, y = (i / N) | 0;
-    const slow = Math.sin(x*0.021 + Math.sin(y*0.017)*2.2) * Math.sin(y*0.019) * 4.5;
-    const fine = (r() - 0.5) * 13;
-    const v = 247 + slow + fine;
-    img.data[i*4]   = v + 3;
-    img.data[i*4+1] = v + 0.5;
-    img.data[i*4+2] = v - 7;
-    img.data[i*4+3] = 255;
-  }
-  g.putImageData(img, 0, 0);
-  // pressed fibres
-  g.globalAlpha = .05;
-  for(let i=0;i<190;i++){
-    const x = r()*N, y = r()*N, len = 5 + r()*26, a = r()*Math.PI;
-    g.strokeStyle = r() > .45 ? '#8d8371' : '#ffffff';
-    g.lineWidth = r() < .8 ? .5 : 1;
-    g.beginPath();
-    g.moveTo(x, y);
-    g.lineTo(x + Math.cos(a)*len, y + Math.sin(a)*len);
-    g.stroke();
-  }
-  g.globalAlpha = 1;
-  paperPat = ctx.createPattern(t, 'repeat');
-}
-function drawPaper(){
-  ctx.fillStyle = paperPat;
-  ctx.fillRect(0,0,W,H);
-  // plate tone: light falls from upper left, edges settle darker
-  const vg = ctx.createRadialGradient(W*.38, H*.30, Math.min(W,H)*.16, W*.5, H*.5, Math.max(W,H)*.82);
-  vg.addColorStop(0,'rgba(255,253,247,.55)');
-  vg.addColorStop(.62,'rgba(255,253,247,0)');
-  vg.addColorStop(1,'rgba(120,108,86,.10)');
-  ctx.fillStyle = vg;
-  ctx.fillRect(0,0,W,H);
 }
 
 /* ---------- canvas ---------- */
@@ -267,177 +199,253 @@ function resize(){
   cv.style.width = W+'px'; cv.style.height = H+'px';
   ctx.setTransform(DPR,0,0,DPR,0,0);
 }
-makePaper();
-window.addEventListener('resize', ()=>{ resize(); draw(); });
-resize();
 
-const cam = { x:-40, y:20, z:0.62 };
-const target = { ...cam };
-let animating = false;
-
-function sx(wx){ return (wx - cam.x)*cam.z + W/2; }
-function sy(wy){ return (wy - cam.y)*cam.z + H/2; }
-
-function hexa(hex, a){
-  const n = parseInt(hex.slice(1),16);
-  return `rgba(${n>>16&255},${n>>8&255},${n&255},${a})`;
+/* ---------- paper surface ---------- */
+let paperPat = null;
+function makePaper(){
+  const N = 256, t = document.createElement('canvas');
+  t.width = t.height = N;
+  const g = t.getContext('2d'), img = g.createImageData(N, N), r = mulberry32(24601);
+  for(let i=0;i<N*N;i++){
+    const x = i % N, y = (i / N) | 0;
+    const slow = Math.sin(x*0.021 + Math.sin(y*0.017)*2.2) * Math.sin(y*0.019) * 4.5;
+    const v = 247 + slow + (r() - 0.5) * 13;
+    img.data[i*4] = v+3; img.data[i*4+1] = v+0.5; img.data[i*4+2] = v-7; img.data[i*4+3] = 255;
+  }
+  g.putImageData(img, 0, 0);
+  g.globalAlpha = .05;
+  for(let i=0;i<190;i++){
+    const x = r()*N, y = r()*N, len = 5 + r()*26, a = r()*Math.PI;
+    g.strokeStyle = r() > .45 ? '#8d8371' : '#ffffff';
+    g.lineWidth = r() < .8 ? .5 : 1;
+    g.beginPath(); g.moveTo(x, y); g.lineTo(x + Math.cos(a)*len, y + Math.sin(a)*len); g.stroke();
+  }
+  g.globalAlpha = 1;
+  paperPat = ctx.createPattern(t, 'repeat');
+}
+function drawPaper(){
+  ctx.fillStyle = paperPat; ctx.fillRect(0,0,W,H);
+  const vg = ctx.createRadialGradient(W*.38, H*.30, Math.min(W,H)*.16, W*.5, H*.5, Math.max(W,H)*.82);
+  vg.addColorStop(0,'rgba(255,253,247,.55)');
+  vg.addColorStop(.62,'rgba(255,253,247,0)');
+  vg.addColorStop(1,'rgba(120,108,86,.10)');
+  ctx.fillStyle = vg; ctx.fillRect(0,0,W,H);
 }
 
-let hovered = null, selected = null;
+makePaper();
+window.addEventListener('resize', ()=>{ resize(); makePaper(); draw(); });
+resize();
+
+const cam = { x:0, y:0, z:1 };
+function fitView(){
+  const xs = places.map(p=>p.x), ys = places.map(p=>p.y);
+  const pad = 420;                               // room for the plume tails
+  const x0=Math.min(...xs)-pad, x1=Math.max(...xs)+pad;
+  const y0=Math.min(...ys)-pad, y1=Math.max(...ys)+pad;
+  cam.x = (x0+x1)/2; cam.y = (y0+y1)/2;
+  cam.z = Math.min(W/(x1-x0), H/(y1-y0)) * 0.94;
+  Object.assign(target, cam);
+}
+const target = { ...cam };
+let animating = false;
+const sx = wx => (wx - cam.x)*cam.z + W/2;
+const sy = wy => (wy - cam.y)*cam.z + H/2;
+const hexa = (hex,a)=>{const n=parseInt(hex.slice(1),16);return `rgba(${n>>16&255},${n>>8&255},${n&255},${a})`;};
+
+let hovered = null, selected = null, activeQ = null;
+
+/* fit -> 0..1 across the shown places, for the current query */
+function fitNorm(){
+  if(!activeQ) return null;
+  const v = places.map(p => activeQ.places[p.id].fit);
+  const lo = Math.min(...v), hi = Math.max(...v);
+  const m = {};
+  places.forEach(p => m[p.id] = (activeQ.places[p.id].fit - lo) / (hi - lo || 1));
+  return m;
+}
+let norm = null;
 
 function draw(){
   ctx.clearRect(0,0,W,H);
   drawPaper();
+  const rank = activeQ ? activeQ.ranked : null;
 
-  // contours
   ctx.lineWidth = 0.55;
   for(const p of places){
-    const col = CAT[p.cat].c;
-    const px = sx(p.x), py = sy(p.y);
-    const dim = (selected && selected !== p) ? .35 : 1;
-    ctx.strokeStyle = hexa(col, .42*dim);
+    const col = CAT[p.cat].c, px = sx(p.x), py = sy(p.y);
+    let a = .42;
+    if(norm) a = .24 + .34 * Math.pow(norm[p.id], 1.4);
+    if(selected && selected !== p) a *= .40;
+    ctx.strokeStyle = hexa(col, a);
     for(const ring of p.plume){
       ctx.beginPath();
       for(let i=0;i<ring.length;i+=2){
         const X = px + ring[i]*cam.z, Y = py + ring[i+1]*cam.z;
         i===0 ? ctx.moveTo(X,Y) : ctx.lineTo(X,Y);
       }
-      ctx.closePath();
-      ctx.stroke();
+      ctx.closePath(); ctx.stroke();
     }
   }
 
-  // dots
-  for(const p of places){
+  const drawn = [];   // boxes already placed, so labels stop colliding
+  const ordered = rank
+    ? places.slice().sort((a,b)=>rank.indexOf(a.id)-rank.indexOf(b.id))
+    : places;
+  for(const p of ordered){
     const px = sx(p.x), py = sy(p.y);
-    if(px<-80||px>W+80||py<-80||py>H+80) continue;
+    if(px<-90||px>W+90||py<-90||py>H+90) continue;
     const col = CAT[p.cat].c;
-    const dim = (selected && selected !== p) ? .35 : 1;
-    const isActive = (hovered===p || selected===p);
-
-    if(p.crowded){
-      ctx.strokeStyle = hexa('#b8342f', .55*dim);
-      ctx.lineWidth = 1;
-      ctx.beginPath(); ctx.arc(px,py, isActive?9:7.5, 0, 6.2832); ctx.stroke();
+    const active = (hovered===p || selected===p);
+    const n = norm ? norm[p.id] : null;
+    let a = 1, rad = active ? 5 : 3.6;
+    if(n !== null){
+      a = .22 + .78 * Math.pow(n, 1.4);
+      rad = (active ? 5 : 2.6) + 3.4 * Math.pow(n, 1.6);
     }
-    ctx.fillStyle = hexa(col, dim);
-    ctx.beginPath(); ctx.arc(px,py, isActive?5:3.6, 0, 6.2832); ctx.fill();
+    if(selected && selected !== p) a *= .45;
 
-    // labels
-    const showLabel = cam.z > 1.15 || isActive;
-    if(showLabel){
-      ctx.font = '400 11px Inter, system-ui, sans-serif';
-      ctx.fillStyle = isActive ? 'rgba(20,18,13,.95)' : `rgba(20,18,13,${.52*dim})`;
+    // rank marker on the top three
+    const r = rank ? rank.indexOf(p.id) : -1;
+    if(r >= 0 && r < 3){
+      ctx.strokeStyle = hexa(col, .55);
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.arc(px,py, rad + 4.5 + (2-r)*1.4, 0, 6.2832); ctx.stroke();
+    }
+    ctx.fillStyle = hexa(col, a);
+    ctx.beginPath(); ctx.arc(px,py, rad, 0, 6.2832); ctx.fill();
+
+    const show = cam.z > 1.15 || active || (r >= 0 && r < 3);
+    if(show){
+      const off = rad + 7 + (r>=0&&r<3 ? 4 : 0);
+      ctx.font = (active||r===0) ? '400 11px Inter, sans-serif' : '300 11px Inter, sans-serif';
+      ctx.fillStyle = active ? 'rgba(20,18,13,.95)' : `rgba(20,18,13,${.34 + .5*(n===null?.4:n)})`;
       ctx.textBaseline = 'middle';
-      ctx.fillText(p.name, px + (p.crowded?13:9), py);
-      if(p.crowded && (cam.z>1.6 || isActive)){
-        const w = ctx.measureText(p.name).width;
-        ctx.font = '300 10px Inter, system-ui, sans-serif';
-        ctx.fillStyle = `rgba(184,52,47,${.75*dim})`;
-        ctx.fillText('crowded', px + (p.crowded?13:9) + w + 8, py);
+      const tw = ctx.measureText(p.name).width + (activeQ ? 26 : 0);
+      const box = [px+off, py-7, px+off+tw, py+7];
+      const hits = drawn.some(d =>
+        box[0] < d[2] && box[2] > d[0] && box[1] < d[3] && box[3] > d[1]);
+      if(!hits || active){
+        drawn.push(box);
+        ctx.fillText(p.name, px + off, py);
+        if(activeQ){
+          const w = ctx.measureText(p.name).width;
+          ctx.font = '300 10px Inter, sans-serif';
+          ctx.fillStyle = `rgba(133,126,112,${.5 + .5*(n||0)})`;
+          ctx.fillText(activeQ.places[p.id].fit.toFixed(1), px + off + w + 7, py);
+        }
       }
     }
   }
 }
 
-/* ---------- camera animation ---------- */
 function tick(){
-  const dx = target.x-cam.x, dy = target.y-cam.y, dz = target.z-cam.z;
+  const dx=target.x-cam.x, dy=target.y-cam.y, dz=target.z-cam.z;
   if(Math.abs(dx)<.05 && Math.abs(dy)<.05 && Math.abs(dz)<.0004){
     cam.x=target.x; cam.y=target.y; cam.z=target.z; animating=false; draw(); return;
   }
-  cam.x += dx*.11; cam.y += dy*.11; cam.z += dz*.11;
+  cam.x+=dx*.11; cam.y+=dy*.11; cam.z+=dz*.11;
   draw(); requestAnimationFrame(tick);
 }
-function flyTo(x,y,z){ target.x=x; target.y=y; target.z=z; if(!animating){animating=true; requestAnimationFrame(tick);} }
+const flyTo=(x,y,z)=>{ target.x=x; target.y=y; target.z=z;
+  if(!animating){animating=true; requestAnimationFrame(tick);} };
 
 /* ---------- interaction ---------- */
 let dragging=false, moved=false, lx=0, ly=0;
-cv.addEventListener('pointerdown', e=>{ dragging=true; moved=false; lx=e.clientX; ly=e.clientY; cv.classList.add('dragging'); cv.setPointerCapture(e.pointerId); });
-cv.addEventListener('pointerup', e=>{ dragging=false; cv.classList.remove('dragging'); if(!moved) clickAt(e.clientX,e.clientY); });
+cv.addEventListener('pointerdown', e=>{ dragging=true; moved=false; lx=e.clientX; ly=e.clientY;
+  cv.classList.add('dragging'); cv.setPointerCapture(e.pointerId); });
+cv.addEventListener('pointerup', e=>{ dragging=false; cv.classList.remove('dragging');
+  if(!moved){ const p=pick(e.clientX,e.clientY); p ? select(p,false) : clearSel(); } });
 cv.addEventListener('pointermove', e=>{
   if(dragging){
     const dx=e.clientX-lx, dy=e.clientY-ly;
     if(Math.abs(dx)+Math.abs(dy)>3) moved=true;
-    cam.x -= dx/cam.z; cam.y -= dy/cam.z;
-    target.x=cam.x; target.y=cam.y;
+    cam.x-=dx/cam.z; cam.y-=dy/cam.z; target.x=cam.x; target.y=cam.y;
     lx=e.clientX; ly=e.clientY; draw();
   } else {
-    const h = pick(e.clientX,e.clientY);
-    if(h!==hovered){ hovered=h; cv.style.cursor = h?'pointer':'grab'; draw(); }
+    const h=pick(e.clientX,e.clientY);
+    if(h!==hovered){ hovered=h; cv.style.cursor=h?'pointer':'grab'; draw(); }
   }
 });
 cv.addEventListener('wheel', e=>{
   e.preventDefault();
-  const f = Math.exp(-e.deltaY*0.0016);
-  const nz = Math.min(4.5, Math.max(0.28, cam.z*f));
-  const wx = (e.clientX - W/2)/cam.z + cam.x;
-  const wy = (e.clientY - H/2)/cam.z + cam.y;
-  cam.x = wx - (e.clientX - W/2)/nz;
-  cam.y = wy - (e.clientY - H/2)/nz;
-  cam.z = nz;
-  target.x=cam.x; target.y=cam.y; target.z=cam.z;
-  draw();
+  const nz = Math.min(4.5, Math.max(0.28, cam.z*Math.exp(-e.deltaY*0.0016)));
+  const wx=(e.clientX-W/2)/cam.z+cam.x, wy=(e.clientY-H/2)/cam.z+cam.y;
+  cam.x=wx-(e.clientX-W/2)/nz; cam.y=wy-(e.clientY-H/2)/nz; cam.z=nz;
+  target.x=cam.x; target.y=cam.y; target.z=cam.z; draw();
 }, {passive:false});
 
 function pick(cx,cy){
   let best=null, bd=16;
   for(const p of places){
-    const d = Math.hypot(sx(p.x)-cx, sy(p.y)-cy);
+    const d=Math.hypot(sx(p.x)-cx, sy(p.y)-cy);
     if(d<bd){ bd=d; best=p; }
   }
   return best;
 }
-function clickAt(cx,cy){
-  const p = pick(cx,cy);
-  if(p) select(p, false); else clearSel();
-}
 
 /* ---------- card ---------- */
-const card=document.getElementById('card');
+const card=document.getElementById('card'), why=document.getElementById('why');
 function select(p, fly){
   selected = p;
   document.getElementById('cardt').textContent = p.name;
-  document.getElementById('cards').textContent = CAT[p.cat].label;
   document.getElementById('cardb').textContent = p.blurb;
-  const t = document.getElementById('cardtags');
-  t.innerHTML = '';
-  p.tags.forEach(tag=>{ const d=document.createElement('div'); d.className='tag'; d.textContent=tag; t.appendChild(d); });
-  if(p.crowded){ const d=document.createElement('div'); d.className='tag crowd'; d.textContent='usually crowded'; t.appendChild(d); }
+  const tg=document.getElementById('cardtags'); tg.innerHTML='';
+  p.tags.forEach(t=>{const d=document.createElement('div');d.className='tag';d.textContent=t;tg.appendChild(d);});
+
+  if(activeQ){
+    const s = activeQ.places[p.id];
+    const r = activeQ.ranked.indexOf(p.id);
+    document.getElementById('cards').innerHTML =
+      `${CAT[p.cat].label} · ${s.slot}<br>fit ${s.fit>0?'+':''}${s.fit.toFixed(1)}`
+      + ` · ranked ${r+1} of ${activeQ.ranked.length}`;
+    document.getElementById('whyhead').textContent = 'why';
+    const max = Math.max(...s.why.map(w=>Math.abs(w.phi))) || 1;
+    document.getElementById('whyrows').innerHTML = s.why.map(w=>{
+      const frac = Math.abs(w.phi)/max*50;
+      const pos = w.phi > 0;
+      return `<div class="row">
+        <div class="lab"><span>${w.f.replace('_',' ')}</span><span>${pos?'+':''}${w.phi.toFixed(2)}</span></div>
+        <div class="track"><div class="mid"></div>
+          <div class="fill" style="left:${pos?50:50-frac}%;width:${frac}%;
+            background:${pos?'var(--ink)':'var(--neg)'}"></div></div>
+      </div>`;
+    }).join('');
+    document.getElementById('whyfoot').textContent =
+      'bars are each feature’s contribution to the score, against a typical ' +
+      'berkeley space for this state. they sum to the fit.';
+    why.classList.add('on');
+  } else {
+    document.getElementById('cards').textContent = CAT[p.cat].label;
+    why.classList.remove('on');
+  }
   card.classList.add('on');
-  if(fly) flyTo(p.x+90, p.y, 2.1); else draw();
+  if(fly) flyTo(p.x + 110, p.y, 2.0); else draw();
 }
 function clearSel(){ selected=null; card.classList.remove('on'); draw(); }
 document.getElementById('cardx').onclick = clearSel;
 
-/* ---------- chat (hardcoded for now) ---------- */
+/* ---------- chat ---------- */
 const log=document.getElementById('log'), input=document.getElementById('input');
-const SCRIPT = [
-  { place:'morrison library', text:'if you are overstimulated and need to read, try <b>morrison library</b>. enclosed, warm lamps, no laptops, and it never fills up.' },
-  { place:'faculty glade',    text:'for coming down from something, <b>faculty glade</b> is sunken and shaded, off the main paths, and open sky above it.' },
-  { place:'haas courtyard',   text:'for thinking out loud with someone, <b>haas courtyard</b> has low conversation all day, so you will not feel watched.' },
-  { place:'east asian library', text:'for a long stretch of focus, <b>east asian library</b> stays quiet past the second floor and holds light until late afternoon.' },
-];
 let step = 0;
 function say(cls, html){
   const d=document.createElement('div'); d.className='msg '+cls; d.innerHTML=html;
-  log.appendChild(d); log.classList.add('on'); log.scrollTop = log.scrollHeight;
+  log.appendChild(d); log.classList.add('on'); log.scrollTop=log.scrollHeight;
 }
 function send(){
   const v = input.value.trim();
   if(!v) return;
-  say('me', v);
-  input.value='';
-  const s = SCRIPT[step % SCRIPT.length]; step++;
+  say('me', v); input.value='';
+  const q = QUERIES[step % QUERIES.length]; step++;
   setTimeout(()=>{
-    say('ai', s.text);
-    const p = places.find(p=>p.name===s.place);
-    if(p) select(p, true);
-  }, 420);
+    activeQ = q; norm = fitNorm();
+    say('ai', q.reply);
+    select(byId[q.top], true);
+  }, 380);
 }
 document.getElementById('send').onclick = send;
 input.addEventListener('keydown', e=>{ if(e.key==='Enter') send(); });
 
+fitView();
 draw();
 </script>
 </body>
