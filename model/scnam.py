@@ -243,3 +243,47 @@ if __name__ == "__main__":
     print(f"morrison-like place   fit {total - intercept:+.2f} vs a typical space")
     for name, phi, val in explain_rows(rows):
         print(name, phi, val)
+
+
+class PartialSCNAM(nn.Module):
+    """
+    the middle ground, and probably the one to actually use at study scale.
+
+    a free shape function costs ~2k parameters per feature. most features do
+    not need one: more greenery is monotonically better, more crowding is
+    monotonically worse when you are overstimulated -- theory says so and the
+    data will not argue. only a few features plausibly have an interior optimum
+    (noise, daylight). so give those a shape function and leave the rest as
+    state-conditioned linear terms.
+
+    same exact additivity, same explanations, a fraction of the parameters.
+    """
+
+    def __init__(self, d, c, free_idx, k=8):
+        super().__init__()
+        self.d, self.k, self.free = d, k, list(free_idx)
+        self.lin = [i for i in range(d) if i not in self.free]
+        self.shapes = nn.ModuleList([ShapeFn(k) for _ in self.free])
+        self.film = nn.Sequential(
+            nn.Linear(c, 48), nn.SiLU(),
+            nn.Linear(48, len(self.free) * 2 * k + len(self.lin)),
+        )
+        self.head = nn.Parameter(torch.ones(len(self.free), k) / k)
+
+    def contributions(self, ctx, feats):
+        B, nf = feats.shape[0], len(self.free)
+        p = self.film(ctx)
+        gb = p[:, : nf * 2 * self.k].view(B, nf, 2, self.k)
+        wl = p[:, nf * 2 * self.k :]
+        gamma, beta = 1.0 + gb[:, :, 0], gb[:, :, 1]
+        phi = torch.zeros(B, self.d, device=feats.device)
+        if nf:
+            h = torch.stack([self.shapes[j](feats[:, i : i + 1])
+                             for j, i in enumerate(self.free)], 1)
+            phi[:, self.free] = ((gamma * h + beta) * self.head).sum(-1)
+        if self.lin:
+            phi[:, self.lin] = wl * feats[:, self.lin]
+        return phi
+
+    def forward(self, ctx, feats, uid=None):
+        return self.contributions(ctx, feats).sum(-1)

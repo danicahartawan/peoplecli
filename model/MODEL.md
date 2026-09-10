@@ -56,9 +56,7 @@ low-rank user embedding concatenated onto the film input once someone has
 ~10 sessions. same question from two people, different weights, different
 answer.
 
-## result on synthetic data
-
-ground truth built to contain a state-dependent inverted-u in noise:
+## result 1: clean synthetic, unlimited data, 6 features
 
 ```
 pairwise accuracy      bilinear  88.8%      sc-nam  99.2%
@@ -68,9 +66,53 @@ recovered noise optimum          true
   drained / flat          0.57   0.57
 ```
 
-the baseline is not bad — it is *structurally incapable* of the specific thing
-this project claims to study, and 88.8% is what that looks like from the
-outside. worth keeping in the paper as the ablation.
+it recovers the state-dependent peak exactly. but this run samples a fresh
+batch every step, i.e. effectively infinite data, over only 6 features. that
+is not the study.
+
+## result 2: study scale — the full model loses
+
+`sim/simulate.py` guesses features for the 45 real places, simulates 80 people
+making ~2k pairwise choices, and splits **by user** so cold start is measured
+honestly. accuracy on **close calls** (|utility gap| < 0.4) — with 225
+place-slots, two random candidates are usually miles apart and every model gets
+those right, so overall accuracy saturates near 93% and hides everything:
+
+```
+              all pairs   close calls   new users   new, close   params
+  bilinear        91.9%         80.8%       93.3%        81.1%    1,483
+  partial         94.5%         80.8%       95.9%        85.2%    5,369
+  sc-nam          93.0%         74.0%       95.2%        84.4%   27,600
+```
+
+the full sc-nam **overfits at realistic sample size** — 74% on close calls,
+worse than the linear baseline. 27,600 parameters on 1,632 pairs.
+
+## result 3: what to actually ship
+
+`PartialSCNAM` — a free shape function only for `noise` and `daylight`, where
+theory predicts an interior optimum, and state-conditioned linear terms for
+everything else. greenery, crowding and privacy are monotone; spending 2k
+parameters each to discover that is what broke the full model.
+
+close calls, unseen users, mean of 3 seeds:
+
+```
+    256 pairs   bilinear  60.7%   partial  69.4%   sc-nam  66.1%
+    512 pairs   bilinear  74.9%   partial  76.2%   sc-nam  70.8%
+    960 pairs   bilinear  72.1%   partial  75.7%   sc-nam  73.5%
+   1920 pairs   bilinear  79.2%   partial  85.8%   sc-nam  78.4%
+```
+
+partial wins at every size, including the smallest. this is the model to build
+the app on, and the three-way comparison is the ablation table for the paper.
+
+## study sizing
+
+~500 pairwise choices gets you to ~76% on close calls; ~2,000 gets ~86%. so
+roughly **60–70 people × 30 sessions**, and below ~500 the model cannot support
+any claim. all numbers on guessed features and simulated preferences, so treat
+them as an order of magnitude for planning, not a prediction.
 
 ## why the codebook has the features it has
 
