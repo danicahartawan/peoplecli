@@ -34,13 +34,6 @@
   .head h1{font-size:14px;font-weight:500;letter-spacing:-0.02em}
   .head p{margin-top:5px;font-size:12px;font-weight:300;color:var(--muted);max-width:280px;line-height:1.5}
 
-  /* legend */
-  .legend{bottom:28px;left:28px;font-size:11.5px;font-weight:300;color:var(--muted)}
-  .legend .row{display:flex;align-items:center;gap:9px;margin-top:7px}
-  .legend .dot{width:6px;height:6px;border-radius:50%}
-  .legend .rule{width:150px;height:1px;background:var(--line);margin-bottom:12px}
-  .legend .flag{width:6px;height:6px;border-radius:50%;border:1px solid #b8342f;background:transparent}
-
   /* zoom hint */
   .hint{bottom:28px;right:28px;font-size:11px;font-weight:300;color:var(--faint);text-align:right;line-height:1.7}
 
@@ -103,9 +96,6 @@
   <p>a map of how places feel. dots are places, contours are how their quality spreads.</p>
 </div>
 
-<div class="ui legend" id="legend">
-  <div class="rule"></div>
-</div>
 
 <div class="ui hint">scroll to zoom · drag to pan<br>click a dot</div>
 
@@ -370,17 +360,6 @@ function select(p, fly){
 }
 function clearSel(){ selected=null; card.classList.remove('on'); draw(); }
 document.getElementById('cardx').onclick = clearSel;
-
-/* ---------- legend ---------- */
-const legend = document.getElementById('legend');
-for(const k in CAT){
-  const r = document.createElement('div'); r.className='row';
-  r.innerHTML = `<div class="dot" style="background:${CAT[k].c}"></div><div>${CAT[k].label}</div>`;
-  legend.appendChild(r);
-}
-const cr = document.createElement('div'); cr.className='row';
-cr.innerHTML = `<div class="flag"></div><div>usually crowded</div>`;
-legend.appendChild(cr);
 
 /* ---------- chat (hardcoded for now) ---------- */
 const log=document.getElementById('log'), input=document.getElementById('input');
