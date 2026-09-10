@@ -9,11 +9,12 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   :root{
-    --ink:#0a0a0a;
-    --muted:#8a8a8a;
-    --faint:#c9c9c9;
-    --line:#e6e6e6;
-    --bg:#ffffff;
+    --ink:#14120d;
+    --muted:#857e70;
+    --faint:#b9b2a2;
+    --line:#e0dbcf;
+    --bg:#f7f4ec;
+    --panel:rgba(250,248,242,.90);
   }
   *{box-sizing:border-box;margin:0;padding:0}
   html,body{height:100%;overflow:hidden;background:var(--bg)}
@@ -41,8 +42,8 @@
   .chat{
     bottom:26px;left:50%;transform:translateX(-50%);
     width:min(520px,calc(100vw - 56px));
-    background:rgba(255,255,255,.92);
-    backdrop-filter:blur(8px);
+    background:var(--panel);
+    backdrop-filter:blur(9px);
     border:1px solid var(--line);
     border-radius:14px;
     box-shadow:0 6px 24px rgba(0,0,0,.05);
@@ -61,17 +62,17 @@
   }
   .chat input::placeholder{color:var(--faint)}
   .chat button{
-    border:1px solid var(--line);background:#fff;border-radius:50%;
+    border:1px solid var(--line);background:rgba(255,255,255,.6);border-radius:50%;
     width:26px;height:26px;cursor:pointer;color:var(--ink);
     display:flex;align-items:center;justify-content:center;font-size:12px;
     transition:background .15s ease;
   }
-  .chat button:hover{background:#f4f4f4}
+  .chat button:hover{background:rgba(255,255,255,.95)}
 
   /* place card */
   .card{
     top:26px;right:28px;width:236px;
-    background:rgba(255,255,255,.94);
+    background:var(--panel);
     backdrop-filter:blur(8px);
     border:1px solid var(--line);border-radius:12px;
     padding:15px 16px;opacity:0;pointer-events:none;
@@ -210,6 +211,52 @@ function makePlume(r){
   return out;
 }
 
+/* ---------- paper surface ---------- */
+let paperPat = null;
+function makePaper(){
+  const N = 256, t = document.createElement('canvas');
+  t.width = t.height = N;
+  const g = t.getContext('2d');
+  const img = g.createImageData(N, N);
+  const r = mulberry32(24601);
+  for(let i=0;i<N*N;i++){
+    // two-octave grain: fine speckle over slow blotch
+    const x = i % N, y = (i / N) | 0;
+    const slow = Math.sin(x*0.021 + Math.sin(y*0.017)*2.2) * Math.sin(y*0.019) * 4.5;
+    const fine = (r() - 0.5) * 13;
+    const v = 247 + slow + fine;
+    img.data[i*4]   = v + 3;
+    img.data[i*4+1] = v + 0.5;
+    img.data[i*4+2] = v - 7;
+    img.data[i*4+3] = 255;
+  }
+  g.putImageData(img, 0, 0);
+  // pressed fibres
+  g.globalAlpha = .05;
+  for(let i=0;i<190;i++){
+    const x = r()*N, y = r()*N, len = 5 + r()*26, a = r()*Math.PI;
+    g.strokeStyle = r() > .45 ? '#8d8371' : '#ffffff';
+    g.lineWidth = r() < .8 ? .5 : 1;
+    g.beginPath();
+    g.moveTo(x, y);
+    g.lineTo(x + Math.cos(a)*len, y + Math.sin(a)*len);
+    g.stroke();
+  }
+  g.globalAlpha = 1;
+  paperPat = ctx.createPattern(t, 'repeat');
+}
+function drawPaper(){
+  ctx.fillStyle = paperPat;
+  ctx.fillRect(0,0,W,H);
+  // plate tone: light falls from upper left, edges settle darker
+  const vg = ctx.createRadialGradient(W*.38, H*.30, Math.min(W,H)*.16, W*.5, H*.5, Math.max(W,H)*.82);
+  vg.addColorStop(0,'rgba(255,253,247,.55)');
+  vg.addColorStop(.62,'rgba(255,253,247,0)');
+  vg.addColorStop(1,'rgba(120,108,86,.10)');
+  ctx.fillStyle = vg;
+  ctx.fillRect(0,0,W,H);
+}
+
 /* ---------- canvas ---------- */
 const cv = document.getElementById('c'), ctx = cv.getContext('2d');
 let W=0, H=0, DPR=1;
@@ -220,6 +267,7 @@ function resize(){
   cv.style.width = W+'px'; cv.style.height = H+'px';
   ctx.setTransform(DPR,0,0,DPR,0,0);
 }
+makePaper();
 window.addEventListener('resize', ()=>{ resize(); draw(); });
 resize();
 
@@ -239,6 +287,7 @@ let hovered = null, selected = null;
 
 function draw(){
   ctx.clearRect(0,0,W,H);
+  drawPaper();
 
   // contours
   ctx.lineWidth = 0.55;
@@ -278,7 +327,7 @@ function draw(){
     const showLabel = cam.z > 1.15 || isActive;
     if(showLabel){
       ctx.font = '400 11px Inter, system-ui, sans-serif';
-      ctx.fillStyle = isActive ? 'rgba(10,10,10,.95)' : `rgba(10,10,10,${.5*dim})`;
+      ctx.fillStyle = isActive ? 'rgba(20,18,13,.95)' : `rgba(20,18,13,${.52*dim})`;
       ctx.textBaseline = 'middle';
       ctx.fillText(p.name, px + (p.crowded?13:9), py);
       if(p.crowded && (cam.z>1.6 || isActive)){
